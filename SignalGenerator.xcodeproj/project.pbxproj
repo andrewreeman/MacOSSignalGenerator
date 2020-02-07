@@ -26,8 +26,8 @@
 		32902C152289DBEC00AA6913 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		329C03B122806F5F0020A6E1 /* SignalGenerator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SignalGenerator; sourceTree = BUILT_PRODUCTS_DIR; };
 		329C03B422806F5F0020A6E1 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		EEC7DD60EEC7942000000001 /* SampleCode.xcconfig */ = {isa = PBXFileReference; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
-		EEE50670EEE504E000000001 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
+		905CDBBEBD7CF0AAFC1E1F8E /* SampleCode.xcconfig */ = {isa = PBXFileReference; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
+		FDB22719F119EEBA221A6641 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,14 +41,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2657E8909439CC8452182ABC /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				905CDBBEBD7CF0AAFC1E1F8E /* SampleCode.xcconfig */,
+			);
+			name = Configuration;
+			sourceTree = "<group>";
+		};
 		329C03A822806F5F0020A6E1 = {
 			isa = PBXGroup;
 			children = (
 				32902C152289DBEC00AA6913 /* README.md */,
 				329C03B322806F5F0020A6E1 /* SignalGenerator */,
 				329C03B222806F5F0020A6E1 /* Products */,
-				EEC77400EEC76A8000000001 /* Configuration */,
-				EEE51530EEE514F000000001 /* LICENSE */,
+				2657E8909439CC8452182ABC /* Configuration */,
+				739FC8BBDAEDF202641B37D9 /* LICENSE */,
 			);
 			sourceTree = "<group>";
 		};
@@ -68,18 +76,10 @@
 			path = SignalGenerator;
 			sourceTree = "<group>";
 		};
-		EEC77400EEC76A8000000001 /* Configuration */ = {
+		739FC8BBDAEDF202641B37D9 /* LICENSE */ = {
 			isa = PBXGroup;
 			children = (
-				EEC7DD60EEC7942000000001 /* SampleCode.xcconfig */,
-			);
-			name = Configuration;
-			sourceTree = "<group>";
-		};
-		EEE51530EEE514F000000001 /* LICENSE */ = {
-			isa = PBXGroup;
-			children = (
-				EEE50670EEE504E000000001 /* LICENSE.txt */,
+				FDB22719F119EEBA221A6641 /* LICENSE.txt */,
 			);
 			name = LICENSE;
 			path = LICENSE;
@@ -95,7 +95,6 @@
 				329C03AD22806F5F0020A6E1 /* Sources */,
 				329C03AE22806F5F0020A6E1 /* Frameworks */,
 				329C03AF22806F5F0020A6E1 /* CopyFiles */,
-				27C19F0027C1C49000000001,
 			);
 			buildRules = (
 			);
@@ -113,7 +112,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
-				LastUpgradeCheck = 1100;
+				LastUpgradeCheck = 1130;
 				ORGANIZATIONNAME = Apple;
 				TargetAttributes = {
 					329C03B022806F5F0020A6E1 = {
@@ -153,7 +152,7 @@
 /* Begin XCBuildConfiguration section */
 		329C03B622806F5F0020A6E1 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EEC7DD60EEC7942000000001 /* SampleCode.xcconfig */;
+			baseConfigurationReference = 905CDBBEBD7CF0AAFC1E1F8E /* SampleCode.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -214,7 +213,7 @@
 		};
 		329C03B722806F5F0020A6E1 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EEC7DD60EEC7942000000001 /* SampleCode.xcconfig */;
+			baseConfigurationReference = 905CDBBEBD7CF0AAFC1E1F8E /* SampleCode.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -268,11 +267,12 @@
 		};
 		329C03B922806F5F0020A6E1 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EEC7DD60EEC7942000000001 /* SampleCode.xcconfig */;
+			baseConfigurationReference = 905CDBBEBD7CF0AAFC1E1F8E /* SampleCode.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -281,11 +281,12 @@
 		};
 		329C03BA22806F5F0020A6E1 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EEC7DD60EEC7942000000001 /* SampleCode.xcconfig */;
+			baseConfigurationReference = 905CDBBEBD7CF0AAFC1E1F8E /* SampleCode.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;

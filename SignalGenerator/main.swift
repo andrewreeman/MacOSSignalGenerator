@@ -22,7 +22,7 @@ if CommandLine.arguments.contains("-help") || CommandLine.arguments.contains("-h
     print("SignalGenerator\n")
     print("Usage:    SignalGenerator [-signal SIGNAL] [-freq FREQUENCY] [-duration DURATION] [-output FILEPATH] [-amplitude VALUE]\n")
     print("Options:\n")
-    print("-\(OptionNames.signal)       Type of signal: sine (default), square, sawtooth, triangle and noise")
+    print("-\(OptionNames.signal)       Type of signal: sine (default), square, sawtoothUp, sawtoothDown, triangle and noise")
     print("-\(OptionNames.frequency)    Frequncy in Hertz (defaut: 440)")
     print("-\(OptionNames.duration)     Duration in seconds (default: 5.0)")
     print("-\(OptionNames.amplitude)    Amplitude between 0.0 and 1.0 (default: 0.5)")
@@ -41,81 +41,88 @@ let amplitude = min(max(getFloatForKeyOrDefault(OptionNames.amplitude, 0.5), 0.0
 let duration = getFloatForKeyOrDefault(OptionNames.duration, 5.0)
 let outputPath = userDefaults.string(forKey: OptionNames.output)
 
-let sine = { (time: Float) -> Float in
-    return amplitude * sin(2.0 * Float.pi * frequency * time)
+let twoPi = 2 * Float.pi
+
+let sine = { (phase: Float) -> Float in
+    return sin(phase)
 }
 
-let whiteNoise = { (time: Float) -> Float in
-    return amplitude * ((Float(arc4random_uniform(UINT32_MAX)) / Float(UINT32_MAX)) * 2 - 1)
+let whiteNoise = { (phase: Float) -> Float in
+    return ((Float(arc4random_uniform(UINT32_MAX)) / Float(UINT32_MAX)) * 2 - 1)
 }
 
-let sawtooth = { (time: Float) -> Float in
-    let period = 1.0 / frequency
-    let currentTime = fmod(Double(time), Double(period))
-    return amplitude * ((Float(currentTime) / period) * 2 - 1.0)
+let sawtoothUp = { (phase: Float) -> Float in
+    return 1.0 - 2.0 * (phase * (1.0 / twoPi))
 }
 
-let square = { (time: Float) -> Float in
-    let period: Double = 1.0 / Double(frequency)
-    let currentTime = fmod(Double(time), period)
-
-    return currentTime < (period / 2.0) ? amplitude : -1.0 * amplitude
+let sawtoothDown = { (phase: Float) -> Float in
+    return (2.0 * (phase * (1.0 / twoPi))) - 1.0
 }
 
-let triangle = { (time: Float) -> Float in
-    let period = 1.0 / Double(frequency)
-    let currentTime = fmod(Double(time), period)
-
-    let value = currentTime / period
-
-    var result = 0.0
-    if value < 0.25 {
-        result = value * 4
-    } else if value < 0.75 {
-        result = 2.0 - (value * 4.0)
+let square = { (phase: Float) -> Float in
+    if phase <= Float.pi {
+        return 1.0
     } else {
-        result = value * 4 - 4.0
+        return -1.0
     }
+}
 
-    return amplitude * Float(result)
+let triangle = { (phase: Float) -> Float in
+    var value = (2.0 * (phase * (1.0 / twoPi))) - 1.0
+    if value < 0.0 {
+        value = -value
+    }
+    return 2.0 * (value - 0.5)
 }
 
 var signal: (Float) -> Float
-switch userDefaults.string(forKey: OptionNames.signal) {
-case "noise":
-    signal = whiteNoise
-case "square":
-    signal = square
-case "sawtooth":
-    signal = sawtooth
-case "triangle":
-    signal = triangle
-default:
+
+if let signalName = userDefaults.string(forKey: OptionNames.signal) {
+    let signalFunctions = ["sine": sine,
+                           "noise": whiteNoise,
+                           "square": square,
+                           "sawtoothUp": sawtoothUp,
+                           "sawtoothDown": sawtoothDown,
+                           "triangle": triangle]
+
+    if let signalFunction = signalFunctions[signalName] {
+        signal = signalFunction
+    } else {
+        print("Please specify a valid signal type: \(signalFunctions.keys.sorted().joined(separator: ", "))")
+        exit(1)
+    }
+} else {
     signal = sine
 }
 
 let engine = AVAudioEngine()
 let mainMixer = engine.mainMixerNode
 let output = engine.outputNode
-let format = output.inputFormat(forBus: 0)
-let sampleRate = format.sampleRate
+let outputFormat = output.inputFormat(forBus: 0)
+let sampleRate = Float(outputFormat.sampleRate)
 // Use output format for input but reduce channel count to 1
-let inputFormat = AVAudioFormat(commonFormat: format.commonFormat,
-                                sampleRate: format.sampleRate,
+let inputFormat = AVAudioFormat(commonFormat: outputFormat.commonFormat,
+                                sampleRate: outputFormat.sampleRate,
                                 channels: 1,
-                                interleaved: format.isInterleaved)
+                                interleaved: outputFormat.isInterleaved)
 
-// The time interval by which we advance each frame.
-let deltaTime = 1.0 / Float(sampleRate)
-var time: Float = 0
+var currentPhase: Float = 0
+// The interval by which we advance the phase each frame.
+let phaseIncrement = (twoPi / sampleRate) * frequency
 
 let srcNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
     let ablPointer = UnsafeMutableAudioBufferListPointer(audioBufferList)
     for frame in 0..<Int(frameCount) {
         // Get signal value for this frame at time.
-        let value = signal(time)
-        // Advance the time for the next frame.
-        time += deltaTime
+        let value = signal(currentPhase) * amplitude
+        // Advance the phase for the next frame.
+        currentPhase += phaseIncrement
+        if currentPhase >= twoPi {
+            currentPhase -= twoPi
+        }
+        if currentPhase < 0.0 {
+            currentPhase += twoPi
+        }
         // Set the same value on all channels (due to the inputFormat we have only 1 channel though).
         for buffer in ablPointer {
             let buf: UnsafeMutableBufferPointer<Float> = UnsafeMutableBufferPointer(buffer)
@@ -128,7 +135,7 @@ let srcNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus 
 engine.attach(srcNode)
 
 engine.connect(srcNode, to: mainMixer, format: inputFormat)
-engine.connect(mainMixer, to: output, format: nil)
+engine.connect(mainMixer, to: output, format: outputFormat)
 mainMixer.outputVolume = 0.5
 
 var outFile: AVAudioFile?
@@ -142,8 +149,8 @@ if let path = outputPath {
 		outputFormatSettings[AVLinearPCMIsNonInterleaved] = false
         outFile = try? AVAudioFile(forWriting: outUrl, settings: outputFormatSettings)
         // Calculate the total number of samples to write for the duration.
-        let samplesToWrite = AVAudioFrameCount(duration * Float(sampleRate))
-        srcNode.installTap(onBus: 0, bufferSize: 1024, format: nil) { buffer, _ in
+        let samplesToWrite = AVAudioFrameCount(duration * sampleRate)
+        srcNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { buffer, _ in
             // Check if we need to adjust the buffer frame length to match
             // the requested number of samples.
             if samplesWritten + buffer.frameLength > samplesToWrite {
@@ -175,6 +182,7 @@ do {
     } else {
 		CFRunLoopRunInMode(.defaultMode, CFTimeInterval(duration), false)
     }
+    engine.stop()
 } catch {
     print("Could not start engine: \(error)")
 }
